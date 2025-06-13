@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>ExercicioViaCep</title>
+</head>
+<body>
+    <main>
+        <h1>ExercicioViaCep</h1>
+        <form action="https://viacep.com.br/ws/" method="get">
+            <label for="cep">CEP:</label>
+            <input type="text" id="cep" name="cep" required>
+            <button type="submit">Buscar</button>
+        </form>
+        <div id="resultado"></div>
+
+        <script>
+            // Função para exibir o resultado
+            function mostrarResultado(data) {
+                const resultadoDiv = document.getElementById('resultado');
+                if (!data) {
+                    resultadoDiv.innerHTML = '';
+                    return;
+                }
+                if (data.erro) {
+                    resultadoDiv.innerHTML = '<p>CEP não encontrado.</p>';
+                } else {
+                    resultadoDiv.innerHTML = `
+                        <p>Logradouro: ${data.logradouro}</p>
+                        <p>Bairro: ${data.bairro}</p>
+                        <p>Cidade: ${data.localidade}</p>
+                        <p>Estado: ${data.uf}</p>
+                    `;
+                }
+            }
+
+            // Preenche o campo com o CEP salvo e mostra resultado salvo, se existirem
+            window.addEventListener('DOMContentLoaded', function() {
+                const cepSalvo = localStorage.getItem('cep');
+                const resultadoSalvo = localStorage.getItem('resultadoCep');
+                if (cepSalvo) {
+                    document.getElementById('cep').value = cepSalvo;
+                }
+                if (resultadoSalvo) {
+                    try {
+                        const data = JSON.parse(resultadoSalvo);
+                        mostrarResultado(data);
+                    } catch (e) {
+                        // Se der erro ao fazer parse, limpa o resultado
+                        mostrarResultado(null);
+                    }
+                }
+            });
+
+            document.querySelector('form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                const cep = document.getElementById('cep').value;
+                // Salva o CEP no localStorage
+                localStorage.setItem('cep', cep);
+                fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Salva o resultado no localStorage
+                        localStorage.setItem('resultadoCep', JSON.stringify(data));
+                        mostrarResultado(data);
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar CEP:', error);
+                    });
+            });
+        </script>   
+    </main>
+</body>
+</html>
